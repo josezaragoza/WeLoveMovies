@@ -7,7 +7,6 @@ async function reviewExists(req, res, next) {
     res.locals.review = foundReview;
     return next();
   }
-
   next({
     status: 404,
     message: "Review cannot be found.",

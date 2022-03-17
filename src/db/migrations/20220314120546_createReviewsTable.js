@@ -2,8 +2,7 @@ exports.up = function (knex) {
   return knex.schema.createTable("reviews", (table) => {
     table.increments("review_id").primary();
     table.text("content");
-    table.integer("score");
-    table.string("rating");
+    table.integer("score").notNullable();
     table.integer("critic_id").unsigned().notNullable();
     table
       .foreign("critic_id")

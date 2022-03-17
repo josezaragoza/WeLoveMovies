@@ -16,9 +16,9 @@ app.use(cors());
 app.use(express.json());
 
 // pipeLine
-app.use("/movies", moviesRouter);
 app.use("/theaters", theatersRouter);
 app.use("/reviews", reviewsRouter);
+app.use("/movies", moviesRouter);
 
 app.use(notFound);
 app.use(errorHandler);

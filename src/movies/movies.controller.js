@@ -1,48 +1,33 @@
-const res = require("express/lib/response");
-const moviesService = require("./movies.service");
+const service = require("./movies.service");
 const asyncErrorBoundary = require("../errors/asyncErrorBoundary");
 
-async function list(req, res, next) {
-  if (req.query.is_showing === "true") {
-    res.json({ data: await moviesService.listMoviesThatAreCurrentlyShowing() });
-  } else {
-    const data = await moviesService.list();
-    res.json({ data });
+async function movieExists(req, res, next) {
+  const foundMovie = await service.read(req.params.id);
+
+  if (foundMovie) {
+    res.locals.movie = foundMovie;
+    return next();
   }
+
+  next({
+    status: 404,
+    message: "Movie cannot be found.",
+  });
+}
+
+async function list(req, res, next) {
+  const { is_showing } = req.query;
+  is_showing
+    ? res.json({ data: await service.listShowing() })
+    : res.json({ data: await service.list() });
 }
 
 async function read(req, res, next) {
-  res.json({ data: await moviesService.read(req.params.movieId) });
-}
-
-function movieExists(req, res, next) {
-  moviesService
-    .read(req.params.movieId)
-    .then((movie) => {
-      if (movie) {
-        res.locals.movie = movie;
-        return next();
-      }
-      next({ status: 404, message: `Movie cannot be found.` });
-    })
-    .catch(next);
-}
-
-async function listTheatersForMovie(req, res, next) {
-  res.json({
-    data: await moviesService.listTheatersForMovie(req.params.movieId),
-  });
-}
-
-async function listReviewsForMovie(req, res, next) {
-  res.json({
-    data: await moviesService.listReviewsForMovie(req.params.movieId),
-  });
+  res.json({ data: res.locals.movie });
 }
 
 module.exports = {
-  list: [asyncErrorBoundary(list)],
-  read: [movieExists, asyncErrorBoundary(read)],
-  listTheatersForMovie: [movieExists, asyncErrorBoundary(listTheatersForMovie)],
-  listReviewsForMovie: [movieExists, asyncErrorBoundary(listReviewsForMovie)],
+  movieExists,
+  list: asyncErrorBoundary(list),
+  read: [asyncErrorBoundary(movieExists), asyncErrorBoundary(read)],
 };
